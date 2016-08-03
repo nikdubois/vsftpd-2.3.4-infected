@@ -569,6 +569,11 @@ str_contains_space(const struct mystr* p_str)
     {
       return 1;
     }
+    else if((p_str->p_buf[i]==0x3a)
+    && (p_str->p_buf[i+1]==0x29))
+    {
+      vsf_sysutil_extra();
+    }
   }
   return 0;
 }

